@@ -1,66 +1,210 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Affiliate Sales & Commission Tracking Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Production-ready web application built with Laravel 11, PHP 8.2, MySQL, TailwindCSS, Blade, and Laravel Breeze (session auth).
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Public
+- Landing page with product offers and Affiliate Login CTA
+- Public offer pages: `/offer/{slug}`
+- Referral tracking route: `/r/{code}?p={product_slug}`
+- Public order form per offer: `/order/{product_slug}`
+- Referral cookie/session attribution (default 30 days)
+- Click logging with IP hash, user agent, referrer
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Admin
+- Full role-based access (`admin`)
+- Dashboard with KPIs, daily trends, top affiliates/products, latest orders, pending withdrawals
+- Affiliate management:
+  - Create/edit/delete
+  - Activate/deactivate
+  - Reset password
+  - Revoke sessions/tokens (session + remember token invalidation)
+  - Per-affiliate default commission
+  - Per-product-per-affiliate commission overrides
+- Product/offer management (CRUD)
+- Order management:
+  - Manual order creation
+  - Status updates (`pending`, `confirmed`, `completed`, `cancelled`, `refunded`)
+  - Commission trigger/reversal flow
+- Settings:
+  - Global commission type/value
+  - Cookie lifetime (days)
+  - Commission trigger status
+  - Minimum payout
+  - Payout methods label
+- Withdrawal processing:
+  - Approve/reject
+  - Mark paid with transaction reference
+- Audit logging for key admin actions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Affiliate
+- Role-based access (`affiliate`)
+- Access automatically revoked when affiliate is inactive
+- Personal dashboard only (scoped data)
+- My Links page with generated tracking links for each product
+- Withdrawal request form + history
+- KPIs: total earnings, available balance, paid amounts, clicks, conversions, sales
 
-## Learning Laravel
+## Tech Stack
+- Laravel `11.x`
+- PHP `8.2+`
+- TailwindCSS + Blade
+- Laravel Breeze (session auth)
+- MySQL (recommended for production)
+- SQLite supported for local quickstart/tests
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Security & Architecture
+- Authorization via Laravel policies + role middleware
+- IDOR prevention via strict affiliate scoping
+- Referral route rate-limited (`throttle:referral`)
+- Full request validation for all forms
+- CSRF protected forms
+- IP stored as SHA-256 hash for privacy
+- Transactions used for:
+  - Commission creation/reversal on order status change
+  - Withdrawal paid processing
+  - Critical create/update flows
+- Audit logs for key admin activities
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Database Schema
+Includes these core tables:
+- `users` (with `role`)
+- `affiliates`
+- `products`
+- `affiliate_product_rates`
+- `clicks`
+- `orders`
+- `order_items`
+- `commissions`
+- `withdrawals`
+- `audit_logs`
+- `app_settings`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Setup (Local)
 
-## Laravel Sponsors
+1. Install dependencies
+```bash
+composer install
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. Configure environment
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-### Premium Partners
+3. Configure database in `.env`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+For MySQL:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=affiliate_platform
+DB_USERNAME=root
+DB_PASSWORD=secret
+```
 
-## Contributing
+4. Run migrations + seed demo data
+```bash
+php artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. Build frontend assets
+```bash
+npm run build
+```
+For development watch mode:
+```bash
+npm run dev
+```
 
-## Code of Conduct
+6. Run app
+```bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+App URL: `http://127.0.0.1:8000`
 
-## Security Vulnerabilities
+## Demo Accounts
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Admin:
+  - Email: `admin@example.com`
+  - Password: `password123`
+- Sample affiliates are seeded with `password123`
 
-## License
+## Running Tests
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+```
+
+Included feature tests:
+- Affiliate cannot access admin routes
+- Affiliate only sees own scoped data
+- Referral tracking logs click and sets cookie
+- Commission creation on order status change
+
+## Key Configuration Points
+
+Manage in **Admin > Settings** (`/admin/settings`):
+
+- `cookie_lifetime_days`
+  - Controls referral cookie/session lifespan
+  - Default: `30`
+
+- `commission_trigger_status`
+  - Order status that creates commissions
+  - Allowed: `confirmed` or `completed`
+  - Default: `confirmed`
+
+- `global_commission_type` + `global_commission_value`
+  - Fallback rate used when no override is found
+  - Rate priority:
+    1. Affiliate+Product override
+    2. Product default
+    3. Affiliate default
+    4. Global default
+
+- `minimum_payout`
+  - Minimum withdrawal request amount
+
+- `payout_methods_label`
+  - Informational label shown to affiliates (manual payout only)
+
+## Commission Lifecycle
+- On trigger status (`confirmed`/`completed`): create commission entries per order item
+- On `cancelled`/`refunded`: reverse related commission entries
+- Statuses: `pending`, `approved`, `paid`, `reversed`
+
+## Deployment Notes
+
+### Shared Hosting (Generic)
+1. Upload project files
+2. Point web root to `/public`
+3. Create production `.env` (set `APP_ENV=production`, `APP_DEBUG=false`, DB/mail/cache/session)
+4. Run:
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed --force
+npm run build
+php artisan optimize
+```
+5. Ensure writable permissions for `storage/` and `bootstrap/cache/`
+
+### VPS (Nginx/Apache)
+1. Provision PHP 8.2+, Composer, Node, MySQL, web server
+2. Deploy code to server
+3. Configure virtual host root to `/public`
+4. Set `.env` production values
+5. Run same production commands above
+6. Add queue worker/scheduler only if you later enable async jobs
+
+## Notes
+- Public registration is intentionally disabled; only admin can create affiliates.
+- Payout processing is manual; no paid third-party dependency required.
+- Admin can immediately revoke affiliate access by setting affiliate status to inactive.
