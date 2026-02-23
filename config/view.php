@@ -27,11 +27,14 @@ return [
     |
     */
 
-    'compiled' => env(
-        'VIEW_COMPILED_PATH',
-        (env('VERCEL_ENV') || env('VERCEL_URL'))
-            ? '/tmp'
-            : realpath(storage_path('framework/views'))
-    ),
+    'compiled' => env('VIEW_COMPILED_PATH', (function () {
+        $path = storage_path('framework/views');
+
+        if (is_dir($path) && is_writable($path)) {
+            return realpath($path);
+        }
+
+        return '/tmp';
+    })()),
 
 ];
