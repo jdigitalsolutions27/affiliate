@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -14,11 +15,15 @@ class Product extends Model
     public const STATUS_INACTIVE = 'inactive';
 
     protected $fillable = [
+        'category_id',
         'name',
         'slug',
         'description',
         'price',
+        'stock',
         'status',
+        'is_featured',
+        'is_best_seller',
         'default_commission_type',
         'default_commission_value',
     ];
@@ -28,7 +33,24 @@ class Product extends Model
         return [
             'price' => 'decimal:2',
             'default_commission_value' => 'decimal:2',
+            'is_featured' => 'boolean',
+            'is_best_seller' => 'boolean',
         ];
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function primaryImage(): ?ProductImage
+    {
+        return $this->images->first();
     }
 
     public function affiliateRates(): HasMany

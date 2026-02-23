@@ -28,6 +28,7 @@ class OrderFactory extends Factory
             'affiliate_id' => Affiliate::factory(),
             'status' => Order::STATUS_PENDING,
             'source' => 'public',
+            'flow_type' => Order::FLOW_CHECKOUT_LITE,
             'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
         ];
     }

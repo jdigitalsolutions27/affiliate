@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -12,12 +13,16 @@ use App\Http\Controllers\Affiliate\WithdrawalController as AffiliateWithdrawalCo
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\OfferController;
+use App\Http\Controllers\Public\ProductCatalogController;
 use App\Http\Controllers\Public\PublicOrderController;
 use App\Http\Controllers\Public\ReferralController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/products', [ProductCatalogController::class, 'index'])->name('products.index');
+Route::get('/product/{slug}', [ProductCatalogController::class, 'show'])->name('products.show');
+Route::get('/category/{slug}', [ProductCatalogController::class, 'byCategory'])->name('categories.show');
 Route::get('/offer/{slug}', [OfferController::class, 'show'])->name('offers.show');
 Route::get('/r/{code}', ReferralController::class)
     ->middleware('throttle:referral')
@@ -54,7 +59,9 @@ Route::prefix('admin')
         Route::post('/affiliates/{affiliate}/reset-password', [AdminAffiliateController::class, 'resetPassword'])->name('affiliates.reset-password');
         Route::post('/affiliates/{affiliate}/revoke-sessions', [AdminAffiliateController::class, 'revokeTokens'])->name('affiliates.revoke-sessions');
 
+        Route::resource('categories', AdminCategoryController::class)->except('show');
         Route::resource('products', AdminProductController::class)->except('show');
+        Route::post('/products/import-csv', [AdminProductController::class, 'importCsv'])->name('products.import-csv');
 
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/create', [AdminOrderController::class, 'create'])->name('orders.create');
@@ -69,6 +76,8 @@ Route::prefix('admin')
 
         Route::get('/settings', [AdminSettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+        Route::post('/settings/meta/test', [AdminSettingController::class, 'testMetaConnection'])->name('settings.meta.test');
+        Route::post('/settings/meta/sync', [AdminSettingController::class, 'syncMetaProducts'])->name('settings.meta.sync');
     });
 
 Route::prefix('affiliate')

@@ -7,6 +7,7 @@ use App\Models\Affiliate;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\AppSettingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,10 @@ use Illuminate\View\View;
 
 class PublicOrderController extends Controller
 {
+    public function __construct(private readonly AppSettingService $settings)
+    {
+    }
+
     public function create(Request $request, string $product_slug): View
     {
         $product = Product::query()
@@ -23,6 +28,7 @@ class PublicOrderController extends Controller
 
         return view('public.order-form', [
             'product' => $product,
+            'orderMode' => $this->settings->get(AppSettingService::KEY_PUBLIC_ORDER_MODE, Order::FLOW_ORDER_REQUEST),
         ]);
     }
 
@@ -33,13 +39,17 @@ class PublicOrderController extends Controller
             ->where('status', Product::STATUS_ACTIVE)
             ->firstOrFail();
 
+        $mode = $this->settings->get(AppSettingService::KEY_PUBLIC_ORDER_MODE, Order::FLOW_ORDER_REQUEST);
+        $isCheckoutLite = $mode === Order::FLOW_CHECKOUT_LITE;
+
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_address' => ['nullable', 'string', 'max:2000'],
+            'customer_notes' => ['nullable', 'string', 'max:2000'],
             'qty' => ['required', 'integer', 'min:1', 'max:1000'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => [$isCheckoutLite ? 'required' : 'nullable', 'numeric', 'min:0'],
         ]);
 
         if (! $validated['customer_email'] && ! $validated['customer_phone']) {
@@ -52,7 +62,9 @@ class PublicOrderController extends Controller
 
         DB::transaction(function () use ($validated, $product, $affiliateId) {
             $qty = (int) $validated['qty'];
-            $unitPrice = (float) $validated['price'];
+            $unitPrice = $isCheckoutLite
+                ? (float) $validated['price']
+                : (float) $product->price;
             $lineTotal = round($qty * $unitPrice, 2);
 
             $order = Order::query()->create([
@@ -60,12 +72,14 @@ class PublicOrderController extends Controller
                 'customer_email' => $validated['customer_email'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'customer_address' => $validated['customer_address'] ?? null,
+                'customer_notes' => $validated['customer_notes'] ?? null,
                 'product_id' => $product->id,
                 'qty' => $qty,
                 'total_amount' => $lineTotal,
                 'affiliate_id' => $affiliateId,
                 'status' => Order::STATUS_PENDING,
                 'source' => 'public',
+                'flow_type' => $mode,
             ]);
 
             OrderItem::query()->create([
@@ -78,8 +92,10 @@ class PublicOrderController extends Controller
         });
 
         return redirect()
-            ->route('offers.show', $product->slug)
-            ->with('status', 'Order submitted successfully. Our team will review it.');
+            ->route('products.show', $product->slug)
+            ->with('status', $isCheckoutLite
+                ? 'Order placed successfully. Our team will confirm your order shortly.'
+                : 'Order request submitted successfully. Our team will contact you shortly.');
     }
 
     private function extractAffiliateId(Request $request, int $productId): ?int

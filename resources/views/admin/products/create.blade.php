@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
-        <form method="POST" action="{{ route('admin.products.store') }}" class="bg-white border border-slate-200 rounded-lg p-6">
+        <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-lg p-6">
             @csrf
             @include('admin.products._form')
 

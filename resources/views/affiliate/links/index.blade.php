@@ -11,7 +11,7 @@
                         <tr>
                             <th class="px-4 py-3">Product</th>
                             <th class="px-4 py-3">Price</th>
-                            <th class="px-4 py-3">Offer URL</th>
+                            <th class="px-4 py-3">Product URL</th>
                             <th class="px-4 py-3">Tracking Link</th>
                         </tr>
                     </thead>
@@ -24,7 +24,7 @@
                                 <td class="px-4 py-3 font-semibold">{{ $product->name }}</td>
                                 <td class="px-4 py-3">${{ number_format((float) $product->price, 2) }}</td>
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('offers.show', $product->slug) }}" class="text-indigo-700 underline" target="_blank">{{ route('offers.show', $product->slug) }}</a>
+                                    <a href="{{ route('products.show', $product->slug) }}" class="text-indigo-700 underline" target="_blank">{{ route('products.show', $product->slug) }}</a>
                                 </td>
                                 <td class="px-4 py-3">
                                     <input readonly value="{{ $trackingLink }}" class="w-full rounded-md border-slate-300 bg-slate-50 text-xs font-mono" onclick="this.select();">

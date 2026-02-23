@@ -4,20 +4,17 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class OfferController extends Controller
 {
-    public function show(Request $request, string $slug): View
+    public function show(string $slug): RedirectResponse
     {
         $product = Product::query()
             ->where('slug', $slug)
             ->where('status', Product::STATUS_ACTIVE)
             ->firstOrFail();
 
-        return view('public.offer', [
-            'product' => $product,
-        ]);
+        return redirect()->route('products.show', $product->slug);
     }
 }

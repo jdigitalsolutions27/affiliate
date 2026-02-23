@@ -49,7 +49,7 @@ class ReferralController extends Controller
         $minutes = $days * 24 * 60;
 
         return redirect()
-            ->route('offers.show', $product->slug)
+            ->route('products.show', $product->slug)
             ->cookie('affiliate_referral', $payload, $minutes);
     }
 }

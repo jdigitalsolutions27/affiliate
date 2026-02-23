@@ -60,6 +60,7 @@ class CommissionCreationTest extends TestCase
             'affiliate_id' => $affiliate->id,
             'qty' => 2,
             'unit_price' => 100,
+            'flow_type' => Order::FLOW_CHECKOUT_LITE,
             'status' => Order::STATUS_CONFIRMED,
         ];
 

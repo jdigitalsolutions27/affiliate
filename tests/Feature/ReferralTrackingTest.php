@@ -28,7 +28,7 @@ class ReferralTrackingTest extends TestCase
 
         $response = $this->get(route('referral.track', ['code' => $affiliate->code, 'p' => $product->slug]));
 
-        $response->assertRedirect(route('offers.show', $product->slug));
+        $response->assertRedirect(route('products.show', $product->slug));
         $response->assertCookie('affiliate_referral');
 
         $this->assertDatabaseHas('clicks', [

@@ -25,6 +25,13 @@
             @endforeach
         </select>
     </div>
+    <div>
+        <label class="block text-sm font-medium text-slate-700">Order Flow</label>
+        <select name="flow_type" class="mt-1 w-full rounded-md border-slate-300">
+            <option value="order_request" @selected(old('flow_type', $order->flow_type ?? 'order_request') === 'order_request')>Order Request</option>
+            <option value="checkout_lite" @selected(old('flow_type', $order->flow_type ?? 'order_request') === 'checkout_lite')>Checkout-lite</option>
+        </select>
+    </div>
 
     <div>
         <label class="block text-sm font-medium text-slate-700">Product</label>
@@ -66,5 +73,9 @@
     <div class="sm:col-span-2">
         <label class="block text-sm font-medium text-slate-700">Customer Address</label>
         <textarea name="customer_address" rows="3" class="mt-1 w-full rounded-md border-slate-300">{{ old('customer_address', $order->customer_address ?? '') }}</textarea>
+    </div>
+    <div class="sm:col-span-2">
+        <label class="block text-sm font-medium text-slate-700">Customer Notes</label>
+        <textarea name="customer_notes" rows="3" class="mt-1 w-full rounded-md border-slate-300">{{ old('customer_notes', $order->customer_notes ?? '') }}</textarea>
     </div>
 </div>

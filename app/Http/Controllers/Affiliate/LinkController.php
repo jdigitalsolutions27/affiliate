@@ -15,6 +15,7 @@ class LinkController extends Controller
         abort_if(! $affiliate, 403);
 
         $products = Product::query()
+            ->with('images')
             ->where('status', Product::STATUS_ACTIVE)
             ->orderBy('name')
             ->get();

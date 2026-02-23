@@ -4,13 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\Affiliate;
 use App\Models\AppSetting;
+use App\Models\Category;
 use App\Models\Click;
 use App\Models\Commission;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\User;
 use App\Models\Withdrawal;
+use App\Services\AppSettingService;
 use App\Services\CommissionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -58,24 +61,47 @@ class DatabaseSeeder extends Seeder
         });
 
         $products = collect([
-            ['name' => 'Starter SEO Package', 'slug' => 'starter-seo-package', 'price' => 99],
-            ['name' => 'Premium Growth Kit', 'slug' => 'premium-growth-kit', 'price' => 199],
-            ['name' => 'Ecommerce Conversion Audit', 'slug' => 'ecommerce-conversion-audit', 'price' => 149],
-            ['name' => 'Content Velocity Plan', 'slug' => 'content-velocity-plan', 'price' => 129],
-            ['name' => 'Ads Funnel Booster', 'slug' => 'ads-funnel-booster', 'price' => 249],
+            ['name' => 'Turmeric Glow Soap', 'slug' => 'turmeric-glow-soap', 'price' => 9.95, 'category' => 'Handmade Soaps', 'featured' => true, 'best_seller' => true],
+            ['name' => 'Lavender Calm Body Butter', 'slug' => 'lavender-calm-body-butter', 'price' => 14.50, 'category' => 'Body Care', 'featured' => true, 'best_seller' => false],
+            ['name' => 'Coconut Oatmeal Scrub Bar', 'slug' => 'coconut-oatmeal-scrub-bar', 'price' => 11.25, 'category' => 'Handmade Soaps', 'featured' => false, 'best_seller' => true],
+            ['name' => 'Rosehip Facial Oil', 'slug' => 'rosehip-facial-oil', 'price' => 18.75, 'category' => 'Face Care', 'featured' => true, 'best_seller' => true],
+            ['name' => 'Lemongrass Hair Mist', 'slug' => 'lemongrass-hair-mist', 'price' => 12.95, 'category' => 'Hair Care', 'featured' => false, 'best_seller' => false],
         ])->map(function ($data) {
+            $category = Category::query()->firstOrCreate(
+                ['slug' => Str::slug($data['category'])],
+                [
+                    'name' => $data['category'],
+                    'description' => 'Seeded category for demo catalog.',
+                    'status' => Category::STATUS_ACTIVE,
+                ]
+            );
+
             return Product::query()->updateOrCreate(
                 ['slug' => $data['slug']],
                 [
+                    'category_id' => $category->id,
                     'name' => $data['name'],
-                    'description' => 'Demo offer seeded for dashboards and testing.',
+                    'description' => 'Handmade organic product seeded for demo storefront and affiliate dashboards.',
                     'price' => $data['price'],
+                    'stock' => random_int(10, 80),
                     'status' => Product::STATUS_ACTIVE,
+                    'is_featured' => (bool) ($data['featured'] ?? false),
+                    'is_best_seller' => (bool) ($data['best_seller'] ?? false),
                     'default_commission_type' => 'percentage',
                     'default_commission_value' => 10,
                 ]
             );
         });
+
+        foreach ($products as $index => $product) {
+            ProductImage::query()->updateOrCreate([
+                'product_id' => $product->id,
+                'sort_order' => 0,
+            ], [
+                'image_path' => 'https://picsum.photos/seed/redfairy'.($index + 1).'/900/900',
+                'alt_text' => $product->name,
+            ]);
+        }
 
         $commissionService = app(CommissionService::class);
 
@@ -109,12 +135,14 @@ class DatabaseSeeder extends Seeder
                     'customer_email' => fake()->safeEmail(),
                     'customer_phone' => fake()->phoneNumber(),
                     'customer_address' => fake()->address(),
+                    'customer_notes' => fake()->sentence(),
                     'product_id' => $product->id,
                     'qty' => $qty,
                     'total_amount' => round($qty * (float) $product->price, 2),
                     'affiliate_id' => $affiliate->id,
                     'status' => $status,
                     'source' => 'public',
+                    'flow_type' => collect([Order::FLOW_ORDER_REQUEST, Order::FLOW_CHECKOUT_LITE])->random(),
                     'created_at' => Carbon::now()->subDays(random_int(0, 29)),
                     'updated_at' => now(),
                 ]);
@@ -178,20 +206,12 @@ class DatabaseSeeder extends Seeder
 
     private function seedSettings(): void
     {
-        $rows = [
-            ['key' => 'global_commission_type', 'value' => 'percentage'],
-            ['key' => 'global_commission_value', 'value' => '10'],
-            ['key' => 'cookie_lifetime_days', 'value' => '30'],
-            ['key' => 'commission_trigger_status', 'value' => 'confirmed'],
-            ['key' => 'minimum_payout', 'value' => '100'],
-            ['key' => 'payout_methods_label', 'value' => 'GCash, Bank, PayPal'],
-        ];
-
-        foreach ($rows as $row) {
+        $defaults = app(AppSettingService::class)->defaults();
+        foreach ($defaults as $key => $value) {
             AppSetting::query()->updateOrCreate([
-                'key' => $row['key'],
+                'key' => $key,
             ], [
-                'value' => $row['value'],
+                'value' => (string) $value,
             ]);
         }
     }

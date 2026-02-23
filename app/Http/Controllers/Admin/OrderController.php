@@ -76,12 +76,14 @@ class OrderController extends Controller
                 'customer_email' => $validated['customer_email'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'customer_address' => $validated['customer_address'] ?? null,
+                'customer_notes' => $validated['customer_notes'] ?? null,
                 'product_id' => $validated['product_id'],
                 'qty' => $qty,
                 'total_amount' => $lineTotal,
                 'affiliate_id' => $validated['affiliate_id'] ?? null,
                 'status' => $validated['status'],
                 'source' => 'admin',
+                'flow_type' => $validated['flow_type'],
             ]);
 
             OrderItem::query()->create([
@@ -134,11 +136,13 @@ class OrderController extends Controller
                 'customer_email' => $validated['customer_email'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'customer_address' => $validated['customer_address'] ?? null,
+                'customer_notes' => $validated['customer_notes'] ?? null,
                 'product_id' => $validated['product_id'],
                 'qty' => $qty,
                 'total_amount' => $lineTotal,
                 'affiliate_id' => $validated['affiliate_id'] ?? null,
                 'status' => $validated['status'],
+                'flow_type' => $validated['flow_type'],
             ]);
 
             $item = $order->items()->first();
@@ -178,10 +182,15 @@ class OrderController extends Controller
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_address' => ['nullable', 'string', 'max:2000'],
+            'customer_notes' => ['nullable', 'string', 'max:2000'],
             'product_id' => ['required', 'exists:products,id'],
             'affiliate_id' => ['nullable', 'exists:affiliates,id'],
             'qty' => ['required', 'integer', 'min:1', 'max:1000'],
             'unit_price' => ['required', 'numeric', 'min:0'],
+            'flow_type' => ['required', Rule::in([
+                Order::FLOW_ORDER_REQUEST,
+                Order::FLOW_CHECKOUT_LITE,
+            ])],
             'status' => ['required', Rule::in([
                 Order::STATUS_PENDING,
                 Order::STATUS_CONFIRMED,
