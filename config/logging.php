@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', is_writable(storage_path('logs')) ? 'stack' : 'stderr'),
+    'default' => trim((string) env('LOG_CHANNEL', is_writable(storage_path('logs')) ? 'stack' : 'stderr')),
 
     /*
     |--------------------------------------------------------------------------
@@ -54,7 +54,7 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', env('LOG_STACK', 'single')),
+            'channels' => explode(',', trim((string) env('LOG_STACK', 'single'))),
             'ignore_exceptions' => false,
         ],
 
