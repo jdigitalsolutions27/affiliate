@@ -1,7 +1,4 @@
-bootstrap/cache/packages.php
-bootstrap/cache/services.php
 storage/framework/views/*
 storage/logs/*
 vendor/
 node_modules/
-
